@@ -29,19 +29,21 @@ namespace WcfClient
                 }
             });
 
-            var a = GC.TryStartNoGCRegion(10000, true);
+            GC.TryStartNoGCRegion(10000, true);
             for (int i = 0; i < 100; i++)
             {
                 string t = i.ToString();
-                TestClient.Contract client = new TestClient.ContractClient(TestClient.ContractClient.EndpointConfiguration.BasicHttpBinding_Contract);
-                /// wołania synchroniczne klasyczne
-                //var task = Task.Factory.StartNew(() =>
-                //    return client.GetData(new TestClient.GetDataRequest(t));
-                //}).ContinueWith(x =>
-                //{
-                //    Console.WriteLine(x.GetAwaiter().GetResult().GetDataResult);
-                //});
-                //tasks.Add(task);
+                Task task;
+                using (var client = new TestClient.ContractClient(TestClient.ContractClient.EndpointConfiguration.BasicHttpBinding_Contract))
+                {
+                    /// wołania synchroniczne klasyczne
+                    task = Task.Factory.StartNew(() =>
+                    {
+                        var result = client.GetData(new TestClient.GetDataRequest(t));
+                        Console.WriteLine(result);
+                    });
+                }
+                tasks.Add(task);
 
                 /// wołanie do soap async
                 //tasks.Add(client.GetDataAsync(new TestClient.GetDataRequest(t)).ContinueWith(x =>
