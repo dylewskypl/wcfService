@@ -13,7 +13,6 @@ namespace WcfClient
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
             List<Task> tasks = new List<Task>();
             int time = 0;
             Task.Factory.StartNew(() => 
@@ -29,20 +28,19 @@ namespace WcfClient
                 }
             });
 
+            ThreadPool.SetMinThreads(117, 1);
+
             GC.TryStartNoGCRegion(10000, true);
             for (int i = 0; i < 100; i++)
             {
                 string t = i.ToString();
-                Task task;
-                using (var client = new TestClient.ContractClient(TestClient.ContractClient.EndpointConfiguration.BasicHttpBinding_Contract))
+                /// wołania synchroniczne klasyczne
+                Task task = Task.Factory.StartNew(() =>
                 {
-                    /// wołania synchroniczne klasyczne
-                    task = Task.Factory.StartNew(() =>
-                    {
-                        var result = client.GetData(new TestClient.GetDataRequest(t));
-                        Console.WriteLine(result);
-                    });
-                }
+                    var client = new TestClient.ContractClient(TestClient.ContractClient.EndpointConfiguration.BasicHttpBinding_Contract);
+                    var result = client.GetData(new TestClient.GetDataRequest(t));
+                    Console.WriteLine(result.GetDataResult);
+                });
                 tasks.Add(task);
 
                 /// wołanie do soap async
